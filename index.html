@@ -1,0 +1,233 @@
+<html lang="en">
+  <head>
+    <link
+      rel="stylesheet"
+      href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"
+    />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="ajax/leaflet.ajax.js"></script>
+    <style>
+      .legenda {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        z-index: 1000;
+        padding: 6px 12px;
+        font: 15px/0px Arial, Helvetica, sans-serif;
+        background: white;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        border-radius: 5px;
+      }
+      .info {
+        padding: 6px 8px;
+        font: 13px/16px Arial, Helvetica, sans-serif;
+        background: white;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        border-radius: 5px;
+      }
+      .info h4 {
+        margin: 0 0 5px;
+        color: #b65252;
+        font-weight: bold;
+        font-size: medium;
+      }
+      .legend {
+        text-align: left;
+        line-height: 18px;
+        color: #555;
+      }
+      .legend i {
+        width: 18px;
+        height: 18px;
+        float: left;
+        margin-right: 8px;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+
+  <body style="padding: 0px; margin: 0px">
+    <div id="map" style="width: 100%; height: 100%"></div>
+    <div class="legenda">
+      <h4 style="text-align: center; font-weight: bold">KETERANGAN PETA</h4>
+      <img src="legenda2.png" style="width: 150px; padding: 0px" />
+    </div>
+    <script>
+      //menampilkan peta
+      var map = L.map("map").setView(
+        [-6.900320619755121, 107.64011544665148],
+        12
+      );
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+      // control that shows state info on hover
+      const info = L.control();
+
+      info.onAdd = function (map) {
+        this._div = L.DomUtil.create("div", "info");
+        this.update();
+        return this._div;
+      };
+
+      info.update = function (props) {
+        const contents = props
+          ? `<b>${props.name}</b><br />${props.density} people / mi<sup>2</sup>`
+          : "Klik salah satu kecamatan untuk informasi lebih lengkap";
+        this._div.innerHTML = `<h4>Peningkatan Built Up Area dan kenaikan Suhu Permukaan Kota Bandung 2019-2023</h4>${contents}`;
+      };
+
+      info.addTo(map);
+      //basemap
+      var Street = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }
+      );
+
+      var Topo = L.tileLayer(
+        "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+        {
+          maxZoom: 19,
+          attribution:
+            'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
+        }
+      );
+
+      //ambil geojson
+      let kecamatanGroup = L.layerGroup();
+
+      //layer basemap
+      var baseMap = {
+        OpenStreetMap: Street,
+        OpenTopoMap: Topo,
+      };
+
+      L.control.layers(baseMap, null, { position: "topright" }).addTo(map);
+
+      //warna geojson
+      var style1 = {
+        color: "white",
+        weight: 3,
+        dashArray: "4",
+        fillColor: "#4E3D43",
+        fillOpacity: 0.9,
+      };
+      var style2 = {
+        color: "white",
+        weight: 3,
+        dashArray: "4",
+        fillColor: "#8A4B4F",
+        fillOpacity: 0.9,
+      };
+      var style3 = {
+        color: "white",
+        weight: 3,
+        dashArray: "4",
+        fillColor: "#CF9C9C",
+        fillOpacity: 0.9,
+      };
+      var style4 = {
+        color: "white",
+        weight: 3,
+        dashArray: "4",
+        fillColor: "#9D9096",
+        fillOpacity: 0.9,
+      };
+      var style5 = {
+        color: "white",
+        weight: 3,
+        dashArray: "4",
+        fillColor: "#D3D3D3",
+        fillOpacity: 0.9,
+      };
+
+      //menampilkan pop up di geojson
+      function popUp(f, l) {
+        var out = [];
+        if (f.properties) {
+          // for (key in f.properties) {
+        }
+        out.push("<b>Kecamatan:</b> " + f.properties["nama_kecamatan"]);
+        out.push("<b>Nilai Built Up:</b> " + f.properties["rata-rata-bu_bu"]);
+        out.push("<b>Nilai LST:</b> " + f.properties["rata-rata-lst_lst"]);
+        l.bindPopup(out.join("<br />"));
+      }
+
+      var jsonTest = new L.GeoJSON.AJAX(
+        [
+          "geojson/andir.geojson",
+          "geojson/sukajadi-new.geojson",
+          "geojson/bandung_kulon-new.geojson",
+          "geojson/babakan_ciparay-new.geojson",
+          "geojson/bojongloa_kaler-new.geojson",
+          "geojson/astanaanyar-new.geojson",
+          "geojson/bojongloa_kidul-new.geojson",
+          "geojson/regol-new.geojson",
+          "geojson/lengkong-new.geojson",
+          "geojson/sumur_bandung-new.geojson",
+          "geojson/batununggal-new.geojson",
+          "geojson/kiaracondong-new.geojson",
+          "geojson/cibeunying_kidul-new.geojson",
+          "geojson/antapani-new.geojson",
+        ],
+
+        {
+          onEachFeature: popUp,
+          style: style1,
+        }
+      ).addTo(map);
+      var jsonTest = new L.GeoJSON.AJAX(
+        [
+          "geojson/cicendo-new.geojson",
+          "geojson/arcamanik-new.geojson",
+          "geojson/bandung_wetan-new.geojson",
+          "geojson/buahbatu-new.geojson",
+          "geojson/bandung_kidul-new.geojson",
+          "geojson/rancasari-new.geojson",
+        ],
+
+        {
+          onEachFeature: popUp,
+          style: style2,
+        }
+      ).addTo(map);
+      var jsonTest = new L.GeoJSON.AJAX(
+        ["geojson/gedebage-new.geojson"],
+
+        {
+          onEachFeature: popUp,
+          style: style3,
+        }
+      ).addTo(map);
+      var jsonTest = new L.GeoJSON.AJAX(
+        [
+          "geojson/sukasari-new.geojson",
+          "geojson/coblong-new.geojson",
+          "geojson/cibeunying_kaler-new.geojson",
+          "geojson/mandalajati-new.geojson",
+          "geojson/ujungberung-new.geojson",
+          "geojson/panyileukan-new.geojson",
+          "geojson/cinambo-new.geojson",
+        ],
+
+        {
+          onEachFeature: popUp,
+          style: style4,
+        }
+      ).addTo(map);
+
+      var jsonTest = new L.GeoJSON.AJAX(
+        ["geojson/cibru-new.geojson", "geojson/cicadap-new.geojson"],
+
+        {
+          onEachFeature: popUp,
+          style: style5,
+        }
+      ).addTo(map);
+    </script>
+  </body>
+</html>
